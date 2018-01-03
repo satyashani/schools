@@ -1,0 +1,24 @@
+{
+    "server": {
+        "port": 3001,
+        "cookieDays" : 2,
+        "sitename" : "Localhost",
+        "siteFQDN" : "localhost:3001"
+    },
+    "logging" : {
+        "level" : "info"
+    },
+    "pg": {
+        "pghost": "localhost",
+        "pgport": "5432",
+        "pgrole": "schools",
+        "pgdb": "postgres",
+        "pgpass": "rewq12",
+        "pgschema": "schools"
+    },
+    "aws": {
+        "bucket": "dev",
+        "accountId": "978599919695",
+        "region": "us-east-1"
+    }
+}
