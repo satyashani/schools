@@ -8,32 +8,32 @@
  * Created: 23 Dec, 2017
  */
 
-CREATE TABLE IF NOT EXISTS version (value integer default 0);
+CREATE TABLE IF NOT EXISTS IF NOT EXISTS version (value integer default 0);
 INSERT INTO version (value) SELECT 1 WHERE NOT EXISTS (SELECT * FROM version LIMIT 1);
 UPDATE version SET value = 1;
 
-CREATE TABLE settings (
+CREATE TABLE IF NOT EXISTS settings (
     key     varchar(20),
     name    varchar(100),
     value   jsonb,    
     CONSTRAINT idx_settings PRIMARY KEY ( key )
 );
 
-CREATE TABLE session ( 
+CREATE TABLE IF NOT EXISTS session ( 
     s                    varchar(255)  NOT NULL,
     sess                 jsonb  ,
     validtill            timestamp DEFAULT current_timestamp NOT NULL,
     CONSTRAINT pk_session PRIMARY KEY ( s )
  );
 
-CREATE TABLE cronjobs (
+CREATE TABLE IF NOT EXISTS cronjobs (
     cronname        varchar(20)     PRIMARY KEY,
     starttime       timestamptz,
     timeperiod      integer,
     params          jsonb 
 );
 
-CREATE TABLE cronevents (
+CREATE TABLE IF NOT EXISTS cronevents (
     id          serial,
     cronname    VARCHAR(20),
     starttime   timestamptz,
@@ -44,27 +44,38 @@ CREATE TABLE cronevents (
     PRIMARY KEY (cronname,starttime)
 );
 
-CREATE TABLE users (
-    id          serial,
-    name        varchar(50),
-    username    varchar(30),
-    email       varchar(30),
-    phone       varchar(30),
-    password    varchar(50),
-    picture     varchar(50),
-    roleid      integer,
-    CONSTRAINT  idx_users PRIMARY KEY ( id ),
-    CONSTRAINT  idx_username UNIQUE username, 
-    CONSTRAINT  fk_roleid FOREIGN KEY ( roleid ) REFERENCES roles( id )
-);
-
-CREATE TABLE roles (
+CREATE TABLE IF NOT EXISTS roles (
     id      serial,
     name    varchar(20),
     CONSTRAINT idx_roles PRIMARY KEY ( id ),
 );
 
-CREATE TABLE student (
+INSERT INTO roles (name) SELECT 'admin' WHERE NOT EXISTS (SELECT * FROM roles WHERE name = 'admin');
+INSERT INTO roles (name) SELECT 'teacher' WHERE NOT EXISTS (SELECT * FROM roles WHERE name = 'teacher');
+INSERT INTO roles (name) SELECT 'manager' WHERE NOT EXISTS (SELECT * FROM roles WHERE name = 'manager');
+INSERT INTO roles (name) SELECT 'student' WHERE NOT EXISTS (SELECT * FROM roles WHERE name = 'student');
+INSERT INTO roles (name) SELECT 'applicant' WHERE NOT EXISTS (SELECT * FROM roles WHERE name = 'applicant');
+
+CREATE TABLE IF NOT EXISTS users (
+    id          serial,
+    name        varchar(50) NOT NULL,
+    username    varchar(30) NOT NULL,
+    email       varchar(30),
+    phone       varchar(30),
+    password    varchar(50),
+    picture     varchar(50),
+    roleid      integer,
+    address     varchar(255),
+    CONSTRAINT  idx_users PRIMARY KEY ( id ),
+    CONSTRAINT  idx_username UNIQUE username, 
+    CONSTRAINT  fk_roleid FOREIGN KEY ( roleid ) REFERENCES roles( id )
+);
+
+-- U/P admin/admin
+INSERT INTO users (name, username,password) SELECT 'Admin','admin' , 'f77d6de03857380efff4adf2e0e446bb' 
+    WHERE NOT EXISTS (SELECT * FROM users WHERE username = 'admin');
+
+CREATE TABLE IF NOT EXISTS student (
     userid              integer ,
     registrationdate    date,
     standard            integer,
@@ -74,12 +85,12 @@ CREATE TABLE student (
     CONSTRAINT fk_userid FOREIGN KEY ( userid ) REFERENCES users( id ) ON DELETE CASCADE
 );
 
-CREATE TABLE standard (
+CREATE TABLE IF NOT EXISTS standard (
     id      serial,
     name    varchar(20)
 );
 
-CREATE TABLE streams (
+CREATE TABLE IF NOT EXISTS streams (
     id          serial,
     name        varchar(20),
     standardid  integer,
@@ -87,7 +98,7 @@ CREATE TABLE streams (
     CONSTRAINT fk_standardid FOREIGN KEY ( standardid ) REFERENCES standard( id ) ON DELETE CASCADE    
 );
 
-CREATE TABLE sections (
+CREATE TABLE IF NOT EXISTS sections (
     id          serial,
     name        varchar(20),
     streamid    integer,
@@ -95,12 +106,12 @@ CREATE TABLE sections (
     CONSTRAINT fk_streamid FOREIGN KEY ( streamid ) REFERENCES stream( id ) ON DELETE CASCADE    
 );
 
-CREATE TABLE subjects (
+CREATE TABLE IF NOT EXISTS subjects (
     id      serial,
     name    varchar(30)
 );
 
-CREATE TABLE streamsbj (
+CREATE TABLE IF NOT EXISTS streamsbj (
     streamid    integer,
     subjectid   integer,
     CONSTRAINT  idx_streamsbj PRIMARY KEY  (streamid,subjectid),
@@ -108,7 +119,7 @@ CREATE TABLE streamsbj (
     CONSTRAINT fk_subjectid FOREIGN KEY ( subjectid ) REFERENCES subject( id ) ON DELETE CASCADE
 );
 
-CREATE TABLE attendance (
+CREATE TABLE IF NOT EXISTS attendance (
     userid          integer,
     presentdate     date,
     present         boolean,
@@ -116,20 +127,20 @@ CREATE TABLE attendance (
     CONSTRAINT fk_userid FOREIGN KEY ( userid ) REFERENCES users ( id ) ON DELETE CASCADE
 );
 
-CREATE TABLE teacherprofile (
+CREATE TABLE IF NOT EXISTS teacherprofile (
     userid      integer,
     highestdeg  varchar(30),
     CONSTRAINT fk_userid FOREIGN KEY ( userid ) REFERENCES users ( id ) ON DELETE CASCADE
 );
 
-CREATE TABLE teachersubjects (
+CREATE TABLE IF NOT EXISTS teachersubjects (
     userid      integer,
     subjectid   integer,
     CONSTRAINT fk_subjectid FOREIGN KEY ( subjectid ) REFERENCES subjects ( id ) ON DELETE CASCADE
     CONSTRAINT fk_userid FOREIGN KEY ( userid ) REFERENCES users ( id ) ON DELETE CASCADE
 );
 
-CREATE TABLE classteacher (
+CREATE TABLE IF NOT EXISTS classteacher (
     sectionid       integer,
     userid          integer,
     CONSTRAINT idx_classteacher PRIMARY KEY  (sectionid,userid),
@@ -137,14 +148,14 @@ CREATE TABLE classteacher (
     CONSTRAINT fk_userid FOREIGN KEY ( userid ) REFERENCES users( id ) ON DELETE CASCADE
 );
 
-CREATE TABLE period (
+CREATE TABLE IF NOT EXISTS period (
     id              serial,
     starttime       varchar(15),
     endtime         varchar(15),
     isbreak         boolean
 );
 
-CREATE TABLE timetable (
+CREATE TABLE IF NOT EXISTS timetable (
     periodid        integer,
     tdate           date,
     sectionid       integer,

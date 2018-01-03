@@ -1,0 +1,26 @@
+1. Initialization
+    a. Create S3 Bucket
+    b. Create DB on RDS
+    c. Configure parameters
+    d. Deploy using aws eb
+2. System Init
+    a. Create/Update schema
+    b. Create basic roles
+    c. Create admin users
+    d. Create sample teacher/student/parent users
+    e. Fill access control table
+3. Setup
+    a. System settings page
+4. Routes
+    a. User Management
+        1) Staff Management
+            a) Add/remove staff
+            b) Update staff role
+            c) Update staff profile
+            d) Add/remove teacher subjects
+            e) Find staff
+        2) Applicant registration
+            - Only against an exam
+        3) Existing student registration
+    b. 
+        
