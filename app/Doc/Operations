@@ -21,6 +21,15 @@
             e) Find staff
         2) Applicant registration
             - Only against an exam
-        3) Existing student registration
-    b. 
-        
+        3) Existing student
+            a) Add/remove/update
+            b) Find by name, username, class, section, stream, fathername, city
+    b. Class Management
+        1) Add/remove/update class name
+            a) Add/Remove/Update stream, auto-create stream if none added
+            b) Add/Remove/Update sections, auto-create one section if none added
+            c) Create classes automatically from 1st to nth
+        2) List all classes, streams, sections
+        3) Add/remove/udpate subjects
+        4) Add/remove subjects to class/stream
+    

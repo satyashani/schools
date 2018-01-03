@@ -44,10 +44,24 @@ CREATE TABLE IF NOT EXISTS cronevents (
     PRIMARY KEY (cronname,starttime)
 );
 
+CREATE TABLE IF NOT EXISTS cities (
+    id          serial,
+    coutryid    integer,
+    name        varchar(50),
+    CONSTRAINT idx_cities PRIMARY KEY ( id ),
+    CONSTRAINT fk_coutryid FOREIGN KEY ( coutryid ) REFERENCES countries( id )
+);
+
+CREATE TABLE IF NOT EXISTS countries (
+    id      serial,
+    name    varchar(50),
+    CONSTRAINT idx_countries PRIMARY KEY ( id )
+);
+
 CREATE TABLE IF NOT EXISTS roles (
     id      serial,
     name    varchar(20),
-    CONSTRAINT idx_roles PRIMARY KEY ( id ),
+    CONSTRAINT idx_roles PRIMARY KEY ( id )
 );
 
 INSERT INTO roles (name) SELECT 'admin' WHERE NOT EXISTS (SELECT * FROM roles WHERE name = 'admin');
@@ -66,13 +80,18 @@ CREATE TABLE IF NOT EXISTS users (
     picture     varchar(50),
     roleid      integer,
     address     varchar(255),
+    city        integer NOT NULL,
+    dob         date    NOT NULL,
+    fathername  varchar(50) NOT NULL,
     CONSTRAINT  idx_users PRIMARY KEY ( id ),
-    CONSTRAINT  idx_username UNIQUE username, 
+    CONSTRAINT  idx_username UNIQUE username,
+    CONSTRAINT  idx_uniqueuser UNIQUE (name,dob,fathername,city), 
     CONSTRAINT  fk_roleid FOREIGN KEY ( roleid ) REFERENCES roles( id )
 );
 
 -- U/P admin/admin
-INSERT INTO users (name, username,password) SELECT 'Admin','admin' , 'f77d6de03857380efff4adf2e0e446bb' 
+INSERT INTO users (name, username,city,dob,fathername,password) 
+    SELECT 'Admin','admin' ,1, 2018-01-01, 'admin', 'f77d6de03857380efff4adf2e0e446bb' 
     WHERE NOT EXISTS (SELECT * FROM users WHERE username = 'admin');
 
 CREATE TABLE IF NOT EXISTS student (
