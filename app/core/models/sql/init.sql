@@ -104,9 +104,13 @@ CREATE TABLE IF NOT EXISTS student (
     CONSTRAINT fk_userid FOREIGN KEY ( userid ) REFERENCES users( id ) ON DELETE CASCADE
 );
 
+CREATE OR REPLACE VIEW studentview AS
+    SELECT u.*, s.section, s.standard,s.stream,s.registrationdate 
+    FROM student s JOIN users u ON s.userid = u.id;
+
 CREATE TABLE IF NOT EXISTS standard (
     id      serial,
-    name    varchar(20)
+    name    varchar(20) NOT NULL UNIQUE
 );
 
 CREATE TABLE IF NOT EXISTS streams (
@@ -114,8 +118,13 @@ CREATE TABLE IF NOT EXISTS streams (
     name        varchar(20),
     standardid  integer,
     CONSTRAINT idx_streams PRIMARY KEY ( id ),
+    CONSTRAINT idx_str_name UNIQUE(name,standardid),
     CONSTRAINT fk_standardid FOREIGN KEY ( standardid ) REFERENCES standard( id ) ON DELETE CASCADE    
 );
+
+CREATE OR REPLACE VIEW streamstd AS
+    SELECT s.*, std.name as standardname FROM streams s
+        JOIN standards std ON std.id = s.standardid;
 
 CREATE TABLE IF NOT EXISTS sections (
     id          serial,
@@ -127,7 +136,7 @@ CREATE TABLE IF NOT EXISTS sections (
 
 CREATE TABLE IF NOT EXISTS subjects (
     id      serial,
-    name    varchar(30)
+    name    varchar(30) NOT NULL UNIQUE
 );
 
 CREATE TABLE IF NOT EXISTS streamsbj (
@@ -137,6 +146,11 @@ CREATE TABLE IF NOT EXISTS streamsbj (
     CONSTRAINT fk_streamid FOREIGN KEY ( streamid ) REFERENCES stream( id ) ON DELETE CASCADE,
     CONSTRAINT fk_subjectid FOREIGN KEY ( subjectid ) REFERENCES subject( id ) ON DELETE CASCADE
 );
+
+CREATE OR REPLACE VIEW strsbj AS 
+    SELECT s.*, str.standardname, str.standardid, str.name as streamname, sbj.name as subjectname FROM streamsbj s 
+        JOIN streamstd str ON str.id = s.streamid
+        JOIN subjects sbj ON sbj.id = s.subjectid;
 
 CREATE TABLE IF NOT EXISTS attendance (
     userid          integer,

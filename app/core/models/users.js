@@ -5,91 +5,84 @@
  * *************************************************************** */
 
 
-
-var async = require('async');
-var pg = require("../postgres")();
-var errors = require("../Errors");
 var crypto = require('crypto');
-
-var table = 'users';
+var errors = require("../Errors");
+var Model = require("./base");
+var conf = require("config").get("pg");
+var tablename = conf.pgschema+".users";
 
 var makepass = function(pass){
     return crypto.createHash('md5').update("xTrEm35A1t"+pass).digest('hex');
 };
 
-var users = {
-    findOne : function(testObj,callback){
-        var t = testObj || {}, cond = [], params = [];
-        if(t.username){
-            params.push(t.username);
-            cond.push("username = $"+params.length);
-        }
-        if(t.name){
-            params.push(t.name);
-            cond.push("name = $"+params.length);
-        }
-        if(t.email){
-            params.push(t.email);
-            cond.push("email = $"+params.length);
-        }
-        if(t.phone){
-            params.push(t.phone);
-            cond.push("phone = $"+params.length);
-        }
-        if(!cond.length){
-            return callback(new Error(errors.no_search_condition));
-        }
-        pg.select("SELECT * FROM "+table+" WHERE "+cond.join(" AND "),params,callback);
-    },
-    find : function(testObj,callback){
-        var t = testObj || {}, cond = [], params = [];
-        if(t.username){
-            params.push(`%{t.username}%`);
-            cond.push("username like $"+params.length);
-        }
-        if(t.name){
-            params.push(t.name);
-            cond.push("name = $"+params.length);
-        }
-        if(t.email){
-            params.push(t.email);
-            cond.push("email = $"+params.length);
-        }
-        if(t.phone){
-            params.push(t.phone);
-            cond.push("phone = $"+params.length);
-        }
-        if(!cond.length){
-            return callback(new Error(errors.no_search_condition));
-        }
-        pg.selectAll("SELECT * FROM "+table+" WHERE "+cond.join(" OR "),params,callback);
-    },
-    create : function(username,name,email,phone,password,picture,roleid,callback){
-        var fields = ['username','name','email','phone','password','picture','roleid'].join(",");
-        var params = [username,name,email,phone,makepass(password),picture,roleid];
-        var holders = ["$1","$2",'$3',"$4","$5","$6","$7"];
-        pg.insert("INSERT INTO "+table+"("+fields+") VALUES ("+holders+")",params,callback);
-    },
-    update : function(updateObj,callback){
-        if(!updateObj.userid || !parseInt(updateObj.userid))
-            return callback(new Error(errors.invalid_userid));
-        
-        var fields = ['username','name','email','phone','password','picture','roleid'];
-        var fieldsSelected = [], params = [];
-        fields.forEach(function(f){
-            if(updateObj.hasOwnProperty(f)){
-                params.push(updateObj[f]);
-                fieldsSelected.push(f+" = $"+params.length);
-            }
+class Users extends Model {
+    constructor (){
+        super(tablename, {
+            id : null,
+            name : null,
+            username : null,
+            email : null,
+            phone : null,
+            password : null,
+            picture : null,
+            roleid : null,
+            address : null,
+            city : null,
+            dob : null,
+            fathername : null
         });
-        
-        params.push(updateObj.userid);
-        if(!fieldsSelected.length){
-            return callback(null,0);
-        }
-        pg.update("UPDATE "+table+" SET "+fieldsSelected.join(",") + " WHERE userid = $"+params.length,params,callback);
-    },
-    remove : function (userid,callback){
-        pg.delete("DELET FROM "+table+" WHERE userid = $1",[userid],callback);
     }
-};
+    
+    getByUsername (username,callback) {
+        this.findOne({eq : {username : username}},callback);
+    }
+    
+    getById (id,callback) {
+        this.findOne({eq : {id : id}},callback);
+    }
+    
+    create (name,username,email,phone,password,pic,role,add,city,dob,father,callback){
+        var self = this;
+        this.get(username,function(err,res){
+            if(res && res.username){
+                return callback(new Error(errors.user_exists));
+            }
+            self.insert({ 
+                name : name, username : username, email : email,
+                phone : phone, password : makepass(password), picture : pic,
+                roleid : role,address : add, city : city, dob : dob, father : father
+            },callback);
+        });
+    }
+    
+    list (fields,callback){
+        var cond = {};
+        if(fields.name){
+            cond.like = {name : "%"+fields.username+"%"};
+        }
+        if(fields.username || fields.email || fields.phone){
+            cond.eq = {};
+            if(fields.username)
+                cond.eq.username = fields.username;
+            if(fields.email)
+                cond.eq.email = fields.email;
+            if(fields.phone)
+                cond.eq.phone = fields.phone;
+        }
+        this.find(cond,callback);
+    }
+    
+    update (fields,cond,callback){
+        if(fields.password){
+            fields.password = makepass(fields.password);
+        }
+        var conditions = {eq : cond};
+        super.update(fields,conditions,callback);
+    }
+    
+    remove (cond,callback){
+        super.remove({eq : cond},callback);
+    }
+}
+
+module.exports = new Users();

@@ -108,25 +108,30 @@ class Model {
         pg.insert(sql,params,callback); 
     }
     
-    findOne ( cond, callback){
+    findOne ( cond, view, callback){
+        cond = cond || {};
+        cond.limit = 1;
+        var cb = typeof view === 'string' ? callback : view;
         try{
+            var t = typeof view === 'string' ? view : this.table;
             var cnd = this.getCond(cond);
-            var sql = "SELECT * FROM "+this.table+ cnd.sql + this.getTailSql(cond);
-            pg.select(sql,cnd.params,callback);
+            var sql = "SELECT * FROM "+t+ cnd.sql + this.getTailSql(cond);
         }catch(e){
-            callback(e);
+            return cb(e);
         }
+        pg.select(sql,cnd.params,cb);
     }
     
-    find (cond,callback){
+    find (cond, view,callback){
+        var cb = typeof view === 'string' ? callback : view;
         try{
+            var t = typeof view === 'string' ? view : this.table;
             var cnd = this.getCond(cond);
-            var sql = "SELECT * FROM "+this.table+ cnd.sql + this.getTailSql(cond);
-            return console.log(sql,cnd.params);
-            pg.selectAll(sql,cnd.params,callback);
+            var sql = "SELECT * FROM "+t+ cnd.sql + this.getTailSql(cond);
         }catch(e){
-            callback(e);
+            return cb(e);
         }
+        pg.selectAll(sql,cnd.params,cb);
     }
     
     remove (cond,callback){
@@ -140,7 +145,7 @@ class Model {
     }
     
     update (data, cond,callback){
-        let updates = [],params = [],holders = [];
+        let updates = [],params = [];
         for (let k in data){
             if(this.props.hasOwnProperty(k)){
                 params.push(data[k]);

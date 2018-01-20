@@ -7,36 +7,52 @@
  * Javascript file session.js
  * *************************************************************** */
 
-
-var conf = require("../../conf");
-var table = conf.pg.pgschema+'.session';
-var pg = require("../postgres")();
-var async = require("async");
-var server = conf.servername || 'xadmin';
+var errors = require("../Errors");
+var Model = require("./base");
+var conf = require("config").get("pg");
+var tablename = conf.pgschema+".session";
 
 var dayms = 86400000;
-exports.create = function(s,sess,validdays,callback){
-    var v = new Date(new Date().getTime()+validdays*dayms);
-    pg.insert("INSERT INTO "+table+" (s,sess,validtill,servername) VALUES($1,$2,$3,$4)",[s,sess,v,server],callback);
-};
 
-exports.update = function(s,sess,cb){
-    pg.update("UPDATE "+table+" SET sess = $1 WHERE s = $2",[sess,s],cb);
-};
-
-exports.remove = function(s,callback){
-    pg.delete("DELETE FROM "+table+" WHERE s = $1",[s],callback);
-};
-
-exports.get = function(s,cb){
-    pg.select("SELECT s,sess,validtill FROM "+table+" WHERE s = $1",[s],cb);
-};
-
-exports.touch = function(s,days,cb){
-    pg.update("UPDATE "+table+" SET validtill = $1 WHERE s = $2",[new Date(new Date().getTime()+days*dayms),s],cb);
-};
-
-exports.removeExpired = function(callback){
-    var sql = "DELETE FROM "+table+" WHERE validtill < $1";
-    pg.delete(sql,[new Date()],callback);
+class Session extends Model {
+    constructor (){
+        super(tablename, {
+            s : null,
+            sess : null,
+            validtill : null
+        });
+    }
+    
+    create (s,sess,validdays,callback){
+        var self = this;
+        this.findOne(s,function(err,ses){
+            if(ses && ses.s){
+                callback(err,ses);
+            }else{
+                var v = new Date(new Date().getTime()+validdays*dayms);
+                self.insert({s : s, sess : sess, validtill : v},callback);
+            }
+        });
+    }
+    
+    update (s,sess,cb){
+        super.update({sess : sess},{ eq : {s : s} }, cb);
+    }
+    
+    remove (s,cb){
+        super.remove({eq : {s : s}},cb);
+    }
+    
+    get (s,cb){
+        super.findOne({eq : {s : s}},cb);
+    }
+    
+    touch (s,days,cb){
+        var v = new Date(new Date().getTime()+days*dayms);
+        super.update({validtill : v}, { eq : {s : s}}, cb);
+    }
+    
+    removeExpired (cb){
+        super.remove({ lt : {validtill : new Date()}},cb);
+    }
 };

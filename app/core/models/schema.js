@@ -32,7 +32,7 @@ var presql = {
 
 var postsql = {
     create : function(schemaname){
-        [
+        return [
             "GRANT USAGE ON SCHEMA "+schemaname+" to "+conf.pgrole,
             "GRANT ALL ON ALL TABLES IN SCHEMA "+schemaname+" TO  "+conf.pgrole,
             "GRANT ALL ON ALL SEQUENCES IN SCHEMA "+schemaname+" TO "+conf.pgrole

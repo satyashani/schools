@@ -9,7 +9,8 @@ var errors = {
     'user_exists' : 'User already exists',
     'invalid_userid' : "Invalid user id input",
     'invalid_field_name' : "Invalid field name in sql",
-    'invalid_sql_matcher' : "Invalid conditional syntax in sql"
+    'invalid_sql_matcher' : "Invalid conditional syntax in sql",
+    'duplicate_value' : "This value is already added"
 };
 
 module.exports = errors;
